@@ -2,7 +2,35 @@
 
 本项目用于下载和处理 ECMWF 公开气象预报数据，支持多种分辨率（0.25°、0.4°）和数据流类型。
 
-## 快速开始
+## 部署方式
+
+### 🐳 Docker 部署（推荐）
+
+#### 快速部署
+
+```bash
+# 一键部署
+./deploy.sh
+```
+
+#### 手动部署
+
+```bash
+# 1. 复制环境配置
+cp .env.example .env
+
+# 2. 创建必要目录
+mkdir -p data ecmwf_data logs config
+
+# 3. 构建并启动
+docker-compose up -d
+```
+
+#### Apple Silicon (M1/M2/M3) Mac 说明
+
+项目已针对 Apple Silicon 优化，会自动构建 x64 架构镜像以确保兼容性。详见 [Apple Silicon 说明文档](docs/APPLE_SILICON.md)。
+
+### 📦 本地安装
 
 ### 1. 安装依赖
 
@@ -73,9 +101,37 @@ ecmwf-dl/
 ├── ECMWF.ipynb               # 主要数据处理流程 
 ├── download_today.py         # 一键下载脚本
 ├── download_multi_streams.py # 全功能下载脚本
+├── deploy.sh                 # Docker 部署脚本
+├── docker-compose.yml        # Docker 编排配置
+├── Dockerfile               # Docker 镜像构建
+├── .env.example             # 环境变量模板
 ├── pyproject.toml           # 项目配置
+├── docs/
+│   └── APPLE_SILICON.md     # Apple Silicon 说明
 └── .github/
     └── copilot-instructions.md  # AI 协作指南
+```
+
+## Docker 管理命令
+
+```bash
+# 查看服务状态
+docker-compose ps
+
+# 查看实时日志
+docker-compose logs -f ecmwf-dl
+
+# 停止服务
+docker-compose down
+
+# 重启服务
+docker-compose restart
+
+# 进入容器
+docker exec -it ecmwf-dl-app bash
+
+# 清理资源
+docker-compose down -v --rmi all
 ```
 
 ## 相关链接

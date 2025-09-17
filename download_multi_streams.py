@@ -2,6 +2,24 @@
 """
 下载多种ECMWF数据流的脚本
 支持下载 oper(业务预报)、enfo(集合预报)、wave(波浪预报)、waef(波浪集合) 数据
+
+使用示例:
+1. 下载单个时间和步长:
+   python download_multi_streams.py --date 2025-09-17 --time 00 --step 0
+
+2. 下载多个预报时间 (00Z, 06Z, 12Z, 18Z):
+   python download_multi_streams.py --multi-times
+   python download_multi_streams.py --times 00 12  # 仅下载00Z和12Z
+
+3. 下载多个时间步长 (0, 3, 6, 9小时):
+   python download_multi_streams.py --multi-steps
+   python download_multi_streams.py --steps 0 6 12  # 仅下载指定步长
+
+4. 下载多个预报时间和多个时间步长的组合:
+   python download_multi_streams.py --multi-all
+
+5. 自定义组合:
+   python download_multi_streams.py --times 00 12 --steps 0 3 6
 """
 
 from ecmwf.opendata import Client
@@ -119,6 +137,43 @@ def download_multi_steps(date=None, time='00', steps=range(0, 12, 3), target_dir
         download_ecmwf_multi_streams(date=date, time=time, step=step, target_dir=target_dir)
 
 
+def download_multi_times(date=None, times=['00', '06', '12', '18'], step=0, target_dir='./data'):
+    """
+    下载多个预报时间的数据
+    
+    参数:
+    - date: 预报日期，格式 'YYYY-MM-DD'，默认为当天
+    - times: 预报时间列表，默认 ['00', '06', '12', '18']
+    - step: 预报步长（小时）
+    - target_dir: 目标目录
+    """
+    
+    for time in tqdm(times, desc="下载不同预报时间"):
+        print(f"\n=== 下载 {time}Z 起报数据 ===")
+        download_ecmwf_multi_streams(date=date, time=time, step=step, target_dir=target_dir)
+
+
+def download_multi_times_steps(date=None, times=['00', '06', '12', '18'], steps=range(0, 12, 3), target_dir='./data'):
+    """
+    下载多个预报时间和多个时间步长的数据
+    
+    参数:
+    - date: 预报日期，格式 'YYYY-MM-DD'，默认为当天
+    - times: 预报时间列表，默认 ['00', '06', '12', '18']
+    - steps: 预报步长列表，默认 [0, 3, 6, 9]
+    - target_dir: 目标目录
+    """
+    
+    total_tasks = len(times) * len(steps)
+    print(f"将下载 {len(times)} 个预报时间 × {len(steps)} 个时间步长 = {total_tasks} 个数据集")
+    
+    for time in times:
+        print(f"\n🕐 开始下载 {time}Z 起报的所有时间步长...")
+        for step in tqdm(steps, desc=f"下载 {time}Z 不同时间步长"):
+            print(f"\n=== 下载 {time}Z 起报 {step}h 预报数据 ===")
+            download_ecmwf_multi_streams(date=date, time=time, step=step, target_dir=target_dir)
+
+
 if __name__ == "__main__":
     import argparse
     
@@ -126,15 +181,60 @@ if __name__ == "__main__":
     parser.add_argument('--date', type=str, help='预报日期 (YYYY-MM-DD)，默认今天')
     parser.add_argument('--time', type=str, default='00', choices=['00', '06', '12', '18'], 
                        help='预报时间 (默认: 00)')
+    parser.add_argument('--times', type=str, nargs='+', choices=['00', '06', '12', '18'],
+                       help='多个预报时间，如 --times 00 12')
     parser.add_argument('--step', type=int, default=0, help='预报步长（小时，默认: 0）')
+    parser.add_argument('--steps', type=int, nargs='+', help='多个预报步长，如 --steps 0 3 6 9')
     parser.add_argument('--multi-steps', action='store_true', help='下载多个时间步长 (0,3,6,9h)')
+    parser.add_argument('--multi-times', action='store_true', help='下载多个预报时间 (00,06,12,18Z)')
+    parser.add_argument('--multi-all', action='store_true', help='下载多个预报时间和多个时间步长的组合')
     parser.add_argument('--target-dir', type=str, default='./data', help='目标目录 (默认: ./data)')
     
     args = parser.parse_args()
     
-    if args.multi_steps:
-        download_multi_steps(date=args.date, time=args.time, target_dir=args.target_dir)
+    # 确定要使用的时间列表
+    if args.times:
+        times_list = args.times
+    elif args.multi_times or args.multi_all:
+        times_list = ['00', '06', '12', '18']
     else:
+        times_list = [args.time]
+    
+    # 确定要使用的步长列表  
+    if args.steps:
+        steps_list = args.steps
+    elif args.multi_steps or args.multi_all:
+        steps_list = list(range(0, 12, 3))
+    else:
+        steps_list = [args.step]
+    
+    # 根据参数选择执行模式
+    if args.multi_all or (args.multi_times and args.multi_steps):
+        # 下载多个时间和多个步长的组合
+        download_multi_times_steps(
+            date=args.date, 
+            times=times_list, 
+            steps=steps_list,
+            target_dir=args.target_dir
+        )
+    elif args.multi_times or len(times_list) > 1:
+        # 下载多个预报时间
+        download_multi_times(
+            date=args.date, 
+            times=times_list, 
+            step=args.step,
+            target_dir=args.target_dir
+        )
+    elif args.multi_steps or len(steps_list) > 1:
+        # 下载多个时间步长
+        download_multi_steps(
+            date=args.date, 
+            time=args.time, 
+            steps=steps_list,
+            target_dir=args.target_dir
+        )
+    else:
+        # 下载单个时间和步长
         download_ecmwf_multi_streams(
             date=args.date, 
             time=args.time, 

@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  ecmwf-dl:
+    image: ecmwf-dl:latest
+    container_name: ecmwf-dl-app
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Shanghai
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - /mnt/78qxsj/temps/ECMWF:/app/ecmwf_data
+      - ./logs:/app/logs
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+
+networks:
+  default:
+    driver: bridge

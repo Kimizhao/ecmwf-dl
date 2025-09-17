@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  ecmwf-dl:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      platforms:
+        - "linux/amd64"
+    image: ecmwf-dl:latest
+    container_name: ecmwf-dl-app
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Shanghai
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./ecmwf_data:/app/ecmwf_data
+      - ./logs:/app/logs
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+
+networks:
+  default:
+    driver: bridge
