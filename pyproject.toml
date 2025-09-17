@@ -1,0 +1,17 @@
+[project]
+name = "ecmwf-dl"
+version = "0.1.0"
+description = "Download and process ECMWF weather forecast data"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "ecmwf-opendata>=0.3.0",
+    "numpy>=1.23.0",
+    "netCDF4>=1.6.0",
+    "pygrib>=2.1.4",
+    "tqdm>=4.64.0",
+    "xarray>=2024.2.0",
+]
+
+[[tool.uv.index]]
+url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple"
