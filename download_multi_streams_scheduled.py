@@ -105,6 +105,11 @@ def download_single_stream(client, retrieve_args, filename, max_retries=3):
         try:
             client.retrieve(**retrieve_args)
             logger.info(f"✅ 成功下载: {filename}")
+            # 修改缓存文件名*.grib2.tmp为*.grib2
+            final_filename = retrieve_args['target'].replace('.grib2.tmp', '.grib2')
+            if os.path.exists(retrieve_args['target']):
+                os.rename(retrieve_args['target'], final_filename)
+                logger.info(f"已将临时文件重命名为: {os.path.basename(final_filename)}")
             return True
             
         except Exception as e:
@@ -205,16 +210,15 @@ def download_ecmwf_multi_streams(date=None, time='00', step=0, target_dir='./dat
                 elif stream_config['stream'] == 'oper':
                     stream_config['suffix'] = 'scda-fc'
 
-            filename = f"{date_str}{time_str}-{step}h-{stream_config['suffix']}.grib2"
+            filename = f"{date_str}{time_str}-{step}h-{stream_config['suffix']}.grib2.tmp"
             target_path = os.path.join(target_dir, filename)
             
-            # 检查文件是否已存在，如果存在则跳过下载
+            # 检查缓存文件是否已存在，如果存在则删除
             if os.path.exists(target_path):
                 file_size = os.path.getsize(target_path) / (1024 * 1024)  # 转换为MB
-                logger.info(f"文件已存在: {filename} ({file_size:.2f} MB)，跳过下载")
-                success_count += 1
-                continue
-            
+                logger.info(f"存在缓存文件: {filename} ({file_size:.2f} MB)，删除")
+                os.remove(target_path)
+
             # 准备下载参数
             retrieve_args = {
                 'date': date,
@@ -350,8 +354,10 @@ def run_scheduler():
     logger.info("每小时下载一次近一天的ECMWF数据")
     logger.info("按 Ctrl+C 停止")
     
-    # 设置每小时运行一次
-    schedule.every().hour.do(scheduled_download_task)
+    # 设置每小时运行一次，但仅在晚上18点到早上8点之间运行
+    schedule.every().hour.at(":00").do(lambda: scheduled_download_task() 
+                                     if 18 <= datetime.now().hour or datetime.now().hour < 8 
+                                     else logger.info("当前时间不在晚上18:00-早上08:00范围内，跳过本次下载"))
     
     # 立即运行一次
     logger.info("立即执行首次下载...")

@@ -132,6 +132,17 @@ docker exec -it ecmwf-dl-app bash
 
 # 清理资源
 docker-compose down -v --rmi all
+
+# 直接运行容器
+docker run -d \
+  --name ecmwf-dl-app \
+  --restart unless-stopped \
+  -e TZ=Asia/Shanghai \
+  -v /mnt/78qxsj/temps/ECMWF:/app/ecmwf_data \
+  -v $(pwd)/logs:/app/logs \
+  --memory=2g \
+  --cpus=1.0 \
+  ecmwf-dl:latest
 ```
 
 ## 相关链接
