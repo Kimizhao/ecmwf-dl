@@ -306,9 +306,9 @@ def scheduled_download_task():
     # 获取近24小时的预报时间（每6小时一次：00Z, 06Z, 12Z, 18Z）
     current_time = datetime.utcnow()
     download_tasks = []
-    
-    # 获取过去24小时内的预报时间，考虑跨天情况
-    for hours_back in range(0, 25, 6):  # 0, 6, 12, 18, 24 小时前
+
+    # 获取过去72小时内的预报时间，考虑跨天情况
+    for hours_back in range(0, 73, 6):  # 0, 6, 12, 18, 24 小时前
         forecast_time = current_time - timedelta(hours=hours_back)
         # 调整到最近的6小时边界
         forecast_hour = (forecast_time.hour // 6) * 6
