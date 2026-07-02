@@ -16,11 +16,11 @@ import os
 
 def download_four_streams():
     """
-    下载图片中提到的4种数据流（基于2025-09-16日期）
+    下载图片中提到的4种数据流（基于2026-06-30日期）
     """
     
     # 根据图片中的日期设置
-    date = '2025-09-16'
+    date = '2026-06-30'
     time = '00'
     step = 0  # 0小时预报
     
@@ -121,7 +121,7 @@ def download_four_streams():
 if __name__ == "__main__":
     print("ECMWF 多数据流下载工具")
     print("将下载图片中提到的4种数据类型")
-    print("日期: 2025-09-16 00Z")
+    print("日期: 2026-06-30 00Z")
     print("-" * 40)
     
     download_four_streams()

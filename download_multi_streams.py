@@ -49,13 +49,14 @@ def download_ecmwf_multi_streams(date=None, time='00', step=0, target_dir='./dat
     # 定义数据流配置
     # 根据ECMWF文档和图片中的文件名格式
     data_streams = [
-        # {
-        #     'source': 'ecmwf',
-        #     'stream': 'oper',  # 业务预报
-        #     'type': 'fc',      # forecast
-        #     'params': ['2t', 'sp'],  # 2米温度和表面气压
-        #     'suffix': 'oper-fc'
-        # },
+        {
+            'source': 'ecmwf',
+            'stream': 'oper',  # 业务预报
+            'type': 'fc',      # forecast
+            'params': ['gh', 'q', 't', 'u', 'v'],
+            'levelist': ['1000', '925', '850', '700', '500', '200'],
+            'suffix': 'pl'
+        }
         # {
         #     'source': 'ecmwf', 
         #     'stream': 'enfo',  # 集合预报
@@ -63,14 +64,14 @@ def download_ecmwf_multi_streams(date=None, time='00', step=0, target_dir='./dat
         #     'params': ['2t', 'sp'],
         #     'suffix': 'enfo-ef'
         # },
-        {
-            'source': 'ecmwf',
-            'stream': 'wave',  # 波浪预报
-            'type': 'fc',      # forecast
-            # 'params': ['swh', 'mwp'],  # 有效波高和平均波周期
-            'params': None,
-            'suffix': 'wave-fc'
-        },
+        # {
+        #     'source': 'ecmwf',
+        #     'stream': 'wave',  # 波浪预报
+        #     'type': 'fc',      # forecast
+        #     # 'params': ['swh', 'mwp'],  # 有效波高和平均波周期
+        #     'params': None,
+        #     'suffix': 'wave-fc'
+        # },
         # {
         #     'source': 'ecmwf',
         #     'stream': 'waef',  # 波浪集合预报
@@ -93,7 +94,13 @@ def download_ecmwf_multi_streams(date=None, time='00', step=0, target_dir='./dat
             # 格式：YYYYMMDDHHMMSS-{step}h-{stream}-{type}.grib2
             date_str = datetime.datetime.strptime(date, '%Y-%m-%d').strftime('%Y%m%d')
             time_str = f"{time}0000"  # 添加分钟和秒
-            filename = f"{date_str}{time_str}-{step}h-{stream_config['suffix']}.grib2"
+            
+            if stream_config['suffix'] == 'pl':
+                # 遵循 ecmwf_pl_YYYYMMDDHH_stepXXX.grib2 格式
+                filename = f"ecmwf_pl_{date_str}{time}_step{int(step):03d}.grib2"
+            else:
+                filename = f"{date_str}{time_str}-{step}h-{stream_config['suffix']}.grib2"
+                
             target_path = os.path.join(target_dir, filename)
             
             # 下载数据
@@ -109,6 +116,10 @@ def download_ecmwf_multi_streams(date=None, time='00', step=0, target_dir='./dat
             # 只有在params不为None时才添加param参数
             if stream_config['params'] is not None:
                 retrieve_args['param'] = stream_config['params']
+                
+            # 只有在levelist存在且不为None时才添加levelist参数
+            if 'levelist' in stream_config and stream_config['levelist'] is not None:
+                retrieve_args['levelist'] = stream_config['levelist']
                 
             client.retrieve(**retrieve_args)
             
