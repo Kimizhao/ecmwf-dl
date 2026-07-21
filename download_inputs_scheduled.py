@@ -156,8 +156,8 @@ def download_file(
 ) -> bool:
     """下载并记录一个文件。"""
     record_id = file_identifier(init_time, name, steps)
-    if not force and record_id in downloaded_files and target.exists() and target.stat().st_size > 0:
-        logger.info("跳过已下载文件: %s", target.name)
+    if not force and record_id in downloaded_files:
+        logger.info("记录显示该文件已下载过，跳过下载 (可能已被移动或删除): %s", target.name)
         return True
 
     if target.exists() and target.stat().st_size == 0:
@@ -328,7 +328,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--retry-delay", type=float, default=2.0, help="基础重试等待秒数，默认 2.0")
     parser.add_argument("--force", action="store_true", help="忽略记录并强制重新下载")
     parser.add_argument("--schedule", action="store_true", help="启动定时下载")
-    parser.add_argument("--interval-minutes", type=int, default=60, help="定时任务间隔分钟，默认 60")
+    parser.add_argument("--interval-minutes", type=int, default=5, help="定时任务间隔分钟，默认 5")
     parser.add_argument("--lookback-hours", type=int, default=24, help="定时任务回看小时数，默认 24")
     parser.add_argument("--show-records", action="store_true", help="显示下载记录")
     parser.add_argument("--clear-records", action="store_true", help="清空下载记录")
